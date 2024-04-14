@@ -19,14 +19,14 @@ def send_welcome(message):
         cur.execute('INSERT INTO main VALUES (?, ?, ?, 0, "main")',
                     (message.from_user.id, 0,
                      message.from_user.username))
-        con.commit()
-        con.close()
     else:
         bot.send_message(message.chat.id, 'Вы в главном меню, выберите, '
-                                          'что вас интересует')
-        cur.execute('UPDATE main'
-                    'SET menu = "main"'
-                    'WHERE id = ?', (message.from_user.id, ))
+                                          'что вас интересует?')
+        cur.execute('''UPDATE main
+                    SET menu = ?
+                    WHERE id = ?''', ('main', message.from_user.id))
+    con.commit()
+    con.close()
 
 
 bot.infinity_polling()

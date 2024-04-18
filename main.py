@@ -2,7 +2,7 @@
 import telebot
 from data.users import User
 from data import db_session, __all_models
-from game_funcs import keybord_generate
+from game_funcs import keybord_generate, callback_answer
 
 # создание бота
 API_TOKEN = '7168920535:AAFENbTdCAxujSoFc9KHomPtqynghWzjZIA'
@@ -20,7 +20,16 @@ start_kb = keybord_generate([{'text': 'Рейтинг',
                              {'text': 'Играть',
                              'callback_data': 'games_menu',
                               'url': None,
-                              'callback_game': None}], width=2)
+                              'callback_game': None},
+                             {'text': 'Друзья',
+                              'callback_data': 'friends_menu',
+                              'url': None,
+                              'callback_game': None}
+                             ], width=3)
+rate_menu_kb = keybord_generate([{'text': 'Назад',
+                              'callback_data': 'main_menu',
+                              'url': None,
+                              'callback_game': None}])
 
 
 @bot.message_handler(commands=['start'])
@@ -50,6 +59,27 @@ def start_reaction(message):
         user.menu = 'main'
     # сохранение изменений в БД
     db_sess.commit()
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_handler(call):
+    if call.data == 'rate_menu':
+        text = f'Рейтинг участников бота по игровым очкам:'
+        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
+                        'rate', db_sess)
+    elif call.data == 'games_menu':
+        text = f'Выберите интересующую вас игру'
+        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
+                        'games', db_sess)
+    elif call.data == 'friends_menu':
+        text = (f'Вы хотите просмотреть список своих друзей или ваш рейтинг '
+                f'среди них?')
+        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
+                        'friends', db_sess)
+    elif call.data == 'main_menu':
+        text = 'Вы в главном меню, выберите, что вас интересует?'
+        callback_answer(bot, call.from_user.id, text, start_kb,
+                        'main', db_sess)
 
 
 # бесконечный поток запросов к серверам telegram

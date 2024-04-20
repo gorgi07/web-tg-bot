@@ -30,6 +30,19 @@ rate_menu_kb = keybord_generate([{'text': 'Назад',
                               'callback_data': 'main_menu',
                               'url': None,
                               'callback_game': None}])
+friends_menu_kb = keybord_generate([{'text': 'Назад',
+                                     'callback_data': 'main_menu',
+                                     'url': None,
+                                     'callback_game': None},
+                                    {'text': 'Список друзей',
+                                     'callback_data': 'friend_list',
+                                     'url': None,
+                                     'callback_game': None},
+                                    {'text': 'Рейтинг',
+                                     'callback_data': 'friend_rate',
+                                     'url': None,
+                                     'callback_game': None}
+                                    ], width=3)
 
 
 @bot.message_handler(commands=['start'])
@@ -49,6 +62,7 @@ def start_reaction(message):
         user = User()
         user.id = message.from_user.id
         user.name = message.from_user.username
+        user.friends = ''
         db_sess.add(user)
     else:
         bot.send_message(message.chat.id, 'Вы в главном меню, выберите, '
@@ -64,22 +78,29 @@ def start_reaction(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     if call.data == 'rate_menu':
-        text = f'Рейтинг участников бота по игровым очкам:'
+        text = f'Рейтинг участников бота по игровым очкам:\n'
         callback_answer(bot, call.from_user.id, text, rate_menu_kb,
-                        'rate', db_sess)
+                        'rate', db_sess, call)
     elif call.data == 'games_menu':
         text = f'Выберите интересующую вас игру'
         callback_answer(bot, call.from_user.id, text, rate_menu_kb,
-                        'games', db_sess)
+                        'games', db_sess, call)
     elif call.data == 'friends_menu':
         text = (f'Вы хотите просмотреть список своих друзей или ваш рейтинг '
                 f'среди них?')
-        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
-                        'friends', db_sess)
+        callback_answer(bot, call.from_user.id, text, friends_menu_kb,
+                        'friends', db_sess, call)
     elif call.data == 'main_menu':
         text = 'Вы в главном меню, выберите, что вас интересует?'
         callback_answer(bot, call.from_user.id, text, start_kb,
-                        'main', db_sess)
+                        'main', db_sess, call)
+    elif call.data == 'friend_list':
+        text = 'Ваши друзья:\n'
+        user = db_sess.query(User).filter(User.id == call.from_user.id).first()
+        text += '\n'.join(user.friends.split())
+        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
+                        'friends_list', db_sess, call)
+
 
 
 # бесконечный поток запросов к серверам telegram

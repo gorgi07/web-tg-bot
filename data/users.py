@@ -10,6 +10,6 @@ class User(SqlAlchemyBase):
                            index=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     menu = sqlalchemy.Column(sqlalchemy.String, default='main')
-    rate = sqlalchemy.Column(sqlalchemy.String,
-                             index=True, default=0)
+    rate = sqlalchemy.Column(sqlalchemy.String, default=0)
     admin = sqlalchemy.Column(sqlalchemy.String, default=0)
+    friends = sqlalchemy.Column(sqlalchemy.String, nullable=True)

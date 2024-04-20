@@ -19,9 +19,9 @@ def keybord_generate(buttons: list, width=3):
     return markup
 
 
-def callback_answer(bot, user_id, text, keybord, new_menu, db_session):
-    send_msg = bot.send_message(user_id, text, reply_markup=keybord)
-    print(send_msg)
+def callback_answer(bot, user_id, text, keybord, new_menu, db_session, call):
+    bot.delete_message(call.message.chat.id, call.message.id)
+    bot.send_message(user_id, text, reply_markup=keybord)
     user = db_session.query(User).filter(User.id == \
                                       user_id).first()
     user.menu = new_menu

@@ -2,10 +2,13 @@ import telebot
 from data.users import User
 from data import db_session, __all_models
 
+
 def keybord_generate(buttons: list, width=3):
-    '''Универсальная функция для генерации inline-клавиатур.
+    """
+    Универсальная функция для генерации inline-клавиатур.
     buttons - список словарей с параметрами кнопок, width - ширина клавиатуры
-    в кнопках'''
+    в кнопках
+    """
     markup = telebot.types.InlineKeyboardMarkup(row_width=width)
     for elem in buttons:
         button = (

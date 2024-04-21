@@ -1,8 +1,10 @@
 # Импорт
 import telebot
 from data.users import User
+from data.admins import Admin
 from data import db_session, __all_models
-from game_funcs import keybord_generate, callback_answer
+from bot_funcs import keybord_generate, callback_answer
+import threading
 
 # создание бота
 API_TOKEN = '7168920535:AAFENbTdCAxujSoFc9KHomPtqynghWzjZIA'
@@ -14,35 +16,32 @@ db_sess = db_session.create_session()
 
 # определение всех, требуемых далее inline-клавиатур
 start_kb = keybord_generate([{'text': 'Рейтинг',
-                             'callback_data': 'rate_menu',
-                              'url': None,
-                              'callback_game': None},
+                              'callback_data': 'rate_menu',
+                              'url': None},
                              {'text': 'Играть',
-                             'callback_data': 'games_menu',
-                              'url': None,
-                              'callback_game': None},
+                              'callback_data': 'games_menu',
+                              'url': None},
                              {'text': 'Друзья',
                               'callback_data': 'friends_menu',
-                              'url': None,
-                              'callback_game': None}
-                             ], width=3)
+                              'url': None}
+                             ])
 rate_menu_kb = keybord_generate([{'text': 'Назад',
-                              'callback_data': 'main_menu',
-                              'url': None,
-                              'callback_game': None}])
+                                  'callback_data': 'main_menu',
+                                  'url': None}
+                                 ])
 friends_menu_kb = keybord_generate([{'text': 'Назад',
                                      'callback_data': 'main_menu',
-                                     'url': None,
-                                     'callback_game': None},
+                                     'url': None},
+                                    {'text': 'Добавить друга',
+                                     'callback_data': 'add_friend',
+                                     'url': None},
                                     {'text': 'Список друзей',
                                      'callback_data': 'friend_list',
-                                     'url': None,
-                                     'callback_game': None},
-                                    {'text': 'Рейтинг',
+                                     'url': None},
+                                    {'text': 'Рейтинг друзей',
                                      'callback_data': 'friend_rate',
-                                     'url': None,
-                                     'callback_game': None}
-                                    ], width=3)
+                                     'url': None}
+                                    ])
 
 
 @bot.message_handler(commands=['start'])
@@ -81,29 +80,33 @@ def start_reaction(message):
 def callback_handler(call):
     if call.data == 'rate_menu':
         text = f'Рейтинг участников бота по игровым очкам:\n'
-        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
-                        'rate', db_sess, call)
+        callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+
     elif call.data == 'games_menu':
         text = f'Выберите интересующую вас игру'
-        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
-                        'games', db_sess, call)
+        callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+
     elif call.data == 'friends_menu':
         text = (f'Вы хотите просмотреть список своих друзей или ваш рейтинг '
                 f'среди них?')
-        callback_answer(bot, call.from_user.id, text, friends_menu_kb,
-                        'friends', db_sess, call)
+        callback_answer(bot, call.from_user.id, text, friends_menu_kb, call)
+
     elif call.data == 'main_menu':
         text = 'Вы в главном меню, выберите, что вас интересует?'
-        callback_answer(bot, call.from_user.id, text, start_kb,
-                        'main', db_sess, call)
+        callback_answer(bot, call.from_user.id, text, start_kb, call)
+
     elif call.data == 'friend_list':
         text = 'Ваши друзья:\n'
         user = db_sess.query(User).filter(User.id == call.from_user.id).first()
         text += '\n'.join(user.friends.split())
-        callback_answer(bot, call.from_user.id, text, rate_menu_kb,
-                        'friends_list', db_sess, call)
+        callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
 
 
+def start(bot):
+    # бесконечный поток запросов к серверам telegram
+    bot.infinity_polling()
 
-# бесконечный поток запросов к серверам telegram
-bot.infinity_polling()
+
+if __name__ == '__main__':
+    first_thread = threading.Thread(target=start, args=[bot])
+    first_thread.run()

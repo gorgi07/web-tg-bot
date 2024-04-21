@@ -8,8 +8,9 @@ class User(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=False, unique=True,
                            index=True)
-    name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    menu = sqlalchemy.Column(sqlalchemy.String, default='main')
-    rate = sqlalchemy.Column(sqlalchemy.String,
-                             index=True, default=0)
-    admin = sqlalchemy.Column(sqlalchemy.String, default=0)
+    name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
+    rate = sqlalchemy.Column(sqlalchemy.Integer, default=0)
+    friends = sqlalchemy.Column(sqlalchemy.String, default="У ТЕБЯ НЕТ ДРУЗЕЙ")
+
+    def full_information(self):
+        return [self.id, self.name, self.menu, self.rate]

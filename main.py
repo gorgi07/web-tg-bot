@@ -3,7 +3,7 @@ import telebot
 from data.users import User
 from data.admins import Admin
 from data import db_session, __all_models
-from bot_funcs import keybord_generate, callback_answer
+from bot_funcs import keybord_generate, callback_answer, add_friend
 import threading
 
 # создание бота
@@ -69,7 +69,7 @@ def start_reaction(message):
         bot.send_message(message.chat.id, 'Вы в главном меню, выберите, '
                                           'что вас интересует?',
                          reply_markup=start_kb)
-        user = db_sess.query(User).filter(User.id == \
+        user = db_sess.query(User).filter(User.id ==
                                           message.from_user.id).first()
         user.menu = 'main'
     # сохранение изменений в БД
@@ -100,6 +100,12 @@ def callback_handler(call):
         user = db_sess.query(User).filter(User.id == call.from_user.id).first()
         text += '\n'.join(user.friends.split())
         callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+
+    elif call.data == 'add_friend':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        text = 'Введите username пользователя, которого хотите добавить в друзья (@username):'
+        new_message = bot.send_message(call.from_user.id, text)
+        bot.register_next_step_handler(new_message, add_friend)
 
 
 def start(bot):

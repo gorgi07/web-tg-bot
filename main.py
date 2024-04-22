@@ -3,7 +3,7 @@ import telebot
 from data.users import User
 from data.admins import Admin
 from data import db_session, __all_models
-from bot_funcs import keybord_generate, callback_answer, tsuefa_game
+from bot_funcs import keybord_generate, callback_answer, tsuefa_game, add_friend
 import threading
 
 # создание бота
@@ -124,6 +124,13 @@ def callback_handler(call):
         user = db_sess.query(User).filter(User.id == call.from_user.id).first()
         text += '\n'.join(user.friends.split())
         callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+
+    elif call.data == 'add_friend':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        text = 'Введите username пользователя, которого хотите добавить в друзья (@username):'
+        new_message = bot.send_message(call.from_user.id, text)
+        bot.register_next_step_handler(new_message, add_friend)
+
 
     elif (call.data == 'stone' or call.data == 'paper' or
           call.data == 'scissors'):

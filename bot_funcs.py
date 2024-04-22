@@ -4,6 +4,10 @@ from data import db_session, __all_models
 from random import choice
 
 
+db_session.global_init('db/bot.db')
+db_sess = db_session.create_session()
+
+
 def keybord_generate(buttons: list):
     """
     Универсальная функция для генерации inline-клавиатур.
@@ -46,3 +50,9 @@ def tsuefa_game(bot, user_choice, db_session, user_id):
         bot.send_message(user_id, 'Вы рроиграли!')
         bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
     db_session.commit()
+
+
+def add_friend(message):
+    user = db_sess.query(User).filter(User.id ==
+                                      message.from_user.id).first()
+    ...

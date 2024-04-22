@@ -3,7 +3,7 @@ import telebot
 from data.users import User
 from data.admins import Admin
 from data import db_session, __all_models
-from bot_funcs import keybord_generate, callback_answer
+from bot_funcs import keybord_generate, callback_answer, tsuefa_game
 import threading
 
 # создание бота
@@ -42,6 +42,30 @@ friends_menu_kb = keybord_generate([{'text': 'Назад',
                                      'callback_data': 'friend_rate',
                                      'url': None}
                                     ])
+games_menu_kb = keybord_generate(
+    [
+        {'text': 'В главное меню',
+         'callback_data': 'main_menu',
+         'url': None},
+        {'text': 'Кости',
+         'callback_data': 'kosti_game',
+         'url': None},
+        {'text': 'Цуефа',
+         'callback_data': 'tsuefa_game',
+         'url': None}
+    ])
+tsuefa_kb = keybord_generate(
+    [{'text': 'Камень',
+      'callback_data': 'stone',
+      'url': None},
+     {'text': 'Ножницы',
+      'callback_data': 'scissors',
+      'url': None},
+     {'text': 'Бумага',
+      'callback_data': 'paper',
+      'url': None}
+     ])
+
 
 
 @bot.message_handler(commands=['start'])
@@ -100,6 +124,21 @@ def callback_handler(call):
         user = db_sess.query(User).filter(User.id == call.from_user.id).first()
         text += '\n'.join(user.friends.split())
         callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+
+    elif (call.data == 'stone' or call.data == 'paper' or
+          call.data == 'scissors'):
+        translate = {'stone': 'Камень',
+                     'scissors': 'Ножницы',
+                     'paper': 'Бумага'}
+        bot.delete_message(call.message.chat.id, call.message.id)
+        tsuefa_game(bot, translate[call.data], db_sess, call.from_user.id)
+        bot.send_message(call.from_user.id, f'Выберите интересующую вас '
+                                            f'игру',
+                         reply_markup=games_menu_kb)
+
+    elif call.data == 'tsuefa_game':
+        text = 'Играем! Камень, ножницы, бумага...\n1, 2, 3!'
+        callback_answer(bot, call.from_user.id, text, tsuefa_kb, call)
 
 
 def start(bot):

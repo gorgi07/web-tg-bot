@@ -1,5 +1,6 @@
 import telebot
 from data.users import User
+from data.friends import Friend
 from data import db_session, __all_models
 from random import choice
 
@@ -39,20 +40,23 @@ def tsuefa_game(bot, user_choice, db_session, user_id):
     }
     user = db_session.query(User).filter(User.id == user_id).first()
     if bot_choice == user_choice:
-        bot.send_message(user_id, 'Ничья! Вы получили 1 балл рейтинга')
-        user.rate += 1
+        bot.send_message(user_id, 'Ничья! Ничего - лучше, чем минус :)')
         bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
     elif rules[user_choice.lower()] == bot_choice.lower():
         bot.send_message(user_id, 'Вы выиграли!')
-        user.rate += 2
+        user.rate += 1
         bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
     else:
-        bot.send_message(user_id, 'Вы рроиграли!')
+        bot.send_message(user_id, 'Вы проиграли!')
+        if user.rate > 0:
+            user.rate -= 1
         bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
     db_session.commit()
 
 
 def add_friend(message):
-    user = db_sess.query(User).filter(User.id ==
+    user = db_session.query(Friend).filter(Friend.id ==
                                       message.from_user.id).first()
-    ...
+    print(f", {str(message.text).replace("@", "")}")
+    user.output += f" {message.text.replase("@", "")}"
+    db_session.commit()

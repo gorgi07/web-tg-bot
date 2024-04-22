@@ -10,7 +10,6 @@ class User(SqlAlchemyBase):
                            index=True)
     name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
     rate = sqlalchemy.Column(sqlalchemy.Integer, default=0)
-    friends = sqlalchemy.Column(sqlalchemy.String, default="У ТЕБЯ НЕТ ДРУЗЕЙ")
 
     def full_information(self):
         return [self.id, self.name, self.menu, self.rate]

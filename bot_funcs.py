@@ -2,7 +2,7 @@ import telebot
 from data.users import User
 from data.friends import Friend
 from data import db_session, __all_models
-from random import choice
+from random import choice, randint
 
 db_session.global_init('db/bot.db')
 db_sess = db_session.create_session()
@@ -76,3 +76,24 @@ def add_friend(message, bot):
         print("No")
 
     db_sess.commit()
+
+
+def kosti_game(bot, db_session, user_id):
+    user_choice, bot_choice = randint(0, 6), randint(0, 6)
+    user = db_session.query(User).filter(User.id == user_id).first()
+    if user_choice > bot_choice:
+        bot.send_message(user_id, f'Очки игрока:{user_choice}\n'
+                                  f'Очки диллера:{bot_choice}\n'
+                                  'Вы выиграли!')
+        user.rate += 1
+        bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
+    elif user_choice == bot_choice:
+        bot.send_message(user_id, 'Ничья! Ничего - лучше, чем минус :)')
+    else:
+        bot.send_message(user_id, f'Очки игрока:{user_choice}\n'
+                                  f'Очки диллера:{bot_choice}\n'
+                                  'Вы проиграли!')
+        if user.rate > 0:
+            user.rate -= 1
+        bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
+    db_session.commit()

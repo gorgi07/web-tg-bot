@@ -4,8 +4,9 @@ from data.users import User
 from data.friends import Friend
 from data.admins import Admin
 from data import db_session, __all_models
-from bot_funcs import callback_answer, tsuefa_game, add_friend
-from keyboard_prototype import start_kb, rate_menu_kb, friends_menu_kb, games_menu_kb, tsuefa_kb
+from bot_funcs import callback_answer, tsuefa_game, add_friend, kosti_game
+from keyboard_prototype import (start_kb, rate_menu_kb, friends_menu_kb,
+                                games_menu_kb, tsuefa_kb, kosti_kb)
 import threading
 
 # создание бота
@@ -61,7 +62,7 @@ def callback_handler(call):
 
     elif call.data == 'games_menu':
         text = f'Выберите интересующую вас игру'
-        callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+        callback_answer(bot, call.from_user.id, text, games_menu_kb, call)
 
     elif call.data == 'friends_menu':
         text = (f'Вы хотите просмотреть список своих друзей или ваш рейтинг '
@@ -123,6 +124,24 @@ def callback_handler(call):
         bot.send_message(call.from_user.id, f'Выберите интересующую вас '
                                             f'игру',
                          reply_markup=games_menu_kb)
+
+    elif call.data == 'kosti_game':
+        text = 'Бросаем кости!'
+        callback_answer(bot, call.from_user.id, text, kosti_kb, call)
+
+    elif call.data == 'start_kosti':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        kosti_game(bot, db_sess, call.from_user.id)
+        bot.send_message(call.from_user.id, f'Выберите интересующую вас '
+                                            f'игру',
+                         reply_markup=games_menu_kb)
+
+    elif call.data == 'ruletka_game':
+        text = 'Сделайте вашу ставку!'
+        callback_answer(bot, call.from_user.id, text, tsuefa_kb, call)
+
+    elif call.data == 'start_roll':
+        bot.delete_message(call.message.chat.id, call.message.id)
 
 
 def start(bot):

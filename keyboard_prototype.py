@@ -38,6 +38,9 @@ games_menu_kb = keybord_generate(
          'url': None},
         {'text': 'Цуефа',
          'callback_data': 'tsuefa_game',
+         'url': None},
+        {'text': 'Рулетка',
+         'callback_data': 'ruletka_game',
          'url': None}
     ])
 tsuefa_kb = keybord_generate(
@@ -51,3 +54,13 @@ tsuefa_kb = keybord_generate(
       'callback_data': 'paper',
       'url': None}
      ])
+kosti_kb = keybord_generate(
+    [{'text': 'Брость кости',
+      'callback_data': 'start_kosti',
+      'url': None}
+     ])
+ruletka_kb = keybord_generate(
+    [{'text': 'Крутить',
+      'callback_data': 'start_roll',
+      'url': None}]
+)

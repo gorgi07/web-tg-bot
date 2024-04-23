@@ -12,4 +12,4 @@ class User(SqlAlchemyBase):
     rate = sqlalchemy.Column(sqlalchemy.Integer, default=0)
 
     def full_information(self):
-        return [self.id, self.name, self.menu, self.rate]
+        return [self.id, self.name, self.rate]

@@ -1,6 +1,7 @@
 # Импорт
 import telebot
 from data.users import User
+from data.friends import Friend
 from data.admins import Admin
 from data import db_session, __all_models
 from bot_funcs import callback_answer, tsuefa_game, add_friend
@@ -35,8 +36,12 @@ def start_reaction(message):
         user = User()
         user.id = message.from_user.id
         user.name = message.from_user.username
-        user.friends = ''
         db_sess.add(user)
+
+        friend = Friend()
+        friend.id = message.from_user.id
+        friend.name = message.from_user.username
+        db_sess.add(friend)
     else:
         bot.send_message(message.chat.id, 'Вы в главном меню, выберите, '
                                           'что вас интересует?',
@@ -77,7 +82,32 @@ def callback_handler(call):
         bot.delete_message(call.message.chat.id, call.message.id)
         text = 'Введите username пользователя, которого хотите добавить в друзья (@username):'
         new_message = bot.send_message(call.from_user.id, text)
-        bot.register_next_step_handler(new_message, add_friend)
+        bot.register_next_step_handler(new_message, add_friend, bot)
+
+    elif 'yes_add_friend' in call.data:
+        callback = call.data.split(" ")
+        first_id = int(callback[1])
+        second_id = int(callback[2])
+        first_friend = db_sess.query(Friend).filter(Friend.id == first_id).first()
+        print(first_friend.friends_input)
+        first_friend.friends_input = first_friend.friends_input.replace(f" {second_id}", "")
+        first_friend.friends += f" {second_id}"
+        second_friend = db_sess.query(Friend).filter(Friend.id == second_id).first()
+        second_friend.friends_output = second_friend.friends_output.replace(f" {first_id}", "")
+        second_friend.friends += f" {first_id}"
+        bot.send_message(second_id, f"Вы добавили в дркзья пользователя @{first_friend.name}", reply_markup=rate_menu_kb)
+        bot.send_message(first_id, f"Пользователь @{second_friend.name} принял ваш запрос дружбы", reply_markup=rate_menu_kb)
+
+    elif 'no_add_friend' in call.data:
+        callback = call.data.split(" ")
+        first_id = int(callback[1])
+        second_id = int(callback[2])
+        first_friend = db_sess.query(Friend).filter(Friend.id == first_id).first()
+        first_friend.friends_input = " ".join(first_friend.friends_input.split().remove(second_id))
+        second_friend = db_sess.query(Friend).filter(Friend.id == second_id).first()
+        second_friend.friends_input = " ".join(second_friend.friends_input.split().remove(first_id))
+        bot.send_message(second_id, f"Вы отклонили запрос дружбы от @{first_friend.name}", reply_markup=rate_menu_kb)
+        bot.send_message(first_id, f"Пользователь @{second_friend.name} отклонил ваш запрос дружбы", reply_markup=rate_menu_kb)
 
     elif call.data == 'tsuefa_game':
         text = 'Играем! Камень, ножницы, бумага...\n1, 2, 3!'

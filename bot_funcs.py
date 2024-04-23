@@ -4,7 +4,6 @@ from data.friends import Friend
 from data import db_session, __all_models
 from random import choice
 
-
 db_session.global_init('db/bot.db')
 db_sess = db_session.create_session()
 
@@ -12,8 +11,7 @@ db_sess = db_session.create_session()
 def keybord_generate(buttons: list):
     """
     Универсальная функция для генерации inline-клавиатур.
-    buttons - список словарей с параметрами кнопок, width - ширина клавиатуры
-    в кнопках
+    buttons - список словарей с параметрами кнопок
     """
     markup = telebot.types.InlineKeyboardMarkup()
     for elem in buttons:
@@ -54,9 +52,27 @@ def tsuefa_game(bot, user_choice, db_session, user_id):
     db_session.commit()
 
 
-def add_friend(message):
-    user = db_session.query(Friend).filter(Friend.id ==
-                                      message.from_user.id).first()
-    print(f", {str(message.text).replace("@", "")}")
-    user.output += f" {message.text.replase("@", "")}"
-    db_session.commit()
+def add_friend(message, bot):
+    new_friend = str(message.text).replace("@", "")
+    first_user = db_sess.query(Friend).filter(Friend.id ==
+                                              message.from_user.id).first()
+    second_user = db_sess.query(Friend).filter(Friend.name == new_friend).first()
+    if second_user:
+        first_user.friends_input += f" {second_user.id}"
+        second_user.friends_output += f" {first_user.id}"
+        bot.send_message(message.from_user.id, "Запрос дружбы успешно отправлен",
+                         reply_markup=keybord_generate([{'text': 'Назад',
+                                                         'callback_data': 'friends_menu',
+                                                         'url': None}
+                                                        ]))
+        bot.send_message(second_user.id, f"Пользователь @{first_user.name} отправил вам запрос дружбы",
+                         reply_markup=keybord_generate([{'text': 'Принять',
+                                                         'callback_data': " ".join(['yes_add_friend', str(first_user.id), str(second_user.id)]),
+                                                         'url': None},
+                                                        {'text': 'Отклонить',
+                                                         'callback_data': " ".join(['no_add_friend', str(first_user.id), str(second_user.id)]),
+                                                         'url': None}]))
+    else:
+        print("No")
+
+    db_sess.commit()

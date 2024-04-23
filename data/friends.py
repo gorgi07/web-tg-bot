@@ -8,6 +8,7 @@ class Friend(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=False, unique=True,
                            index=True)
-    friends = sqlalchemy.Column(sqlalchemy.String, default="")
-    friends_input = sqlalchemy.Column(sqlalchemy.String, default="")
-    friends_output = sqlalchemy.Column(sqlalchemy.String, default="")
+    name = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
+    friends = sqlalchemy.Column(sqlalchemy.String, default="None")
+    friends_input = sqlalchemy.Column(sqlalchemy.String, default="None")
+    friends_output = sqlalchemy.Column(sqlalchemy.String, default="None")

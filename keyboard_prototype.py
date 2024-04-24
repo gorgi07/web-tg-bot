@@ -67,12 +67,6 @@ kosti_kb = keybord_generate(
       'url': None}
      ])
 
-ruletka_kb = keybord_generate(
-    [{'text': 'Крутить',
-      'callback_data': 'start_roll',
-      'url': None}]
-)
-
 friends_all_rate_or_back_kb = keybord_generate(
     [{'text': 'Полный рейтинг',
       'callback_data': 'all_friend_rate',

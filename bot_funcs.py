@@ -29,14 +29,14 @@ def callback_answer(bot, user_id, text, keybord, call):
     bot.send_message(user_id, text, reply_markup=keybord)
 
 
-def tsuefa_game(bot, user_choice, db_session, user_id):
+def tsuefa_game(bot, user_choice, user_id):
     bot_choice = choice(['Камень', 'Ножницы', 'Бумага'])
     rules = {
         'камень': 'ножницы',
         'ножницы': 'бумага',
         'бумага': 'камень'
     }
-    user = db_session.query(User).filter(User.id == user_id).first()
+    user = db_sess.query(User).filter(User.id == user_id).first()
     if bot_choice == user_choice:
         bot.send_message(user_id, 'Ничья! Ничего - лучше, чем минус :)')
         bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
@@ -49,7 +49,7 @@ def tsuefa_game(bot, user_choice, db_session, user_id):
         if user.rate > 0:
             user.rate -= 1
         bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
-    db_session.commit()
+    db_sess.commit()
 
 
 def add_friend(message, bot):
@@ -60,27 +60,37 @@ def add_friend(message, bot):
     if second_user:
         first_user.friends_input += f" {second_user.id}"
         second_user.friends_output += f" {first_user.id}"
-        bot.send_message(message.from_user.id, "Запрос дружбы успешно отправлен",
+        bot.send_message(message.from_user.id, "Запрос дружбы успешно "
+                                               "отправлен",
                          reply_markup=keybord_generate([{'text': 'Назад',
-                                                         'callback_data': 'friends_menu',
+                                                         'callback_data':
+                                                             'friends_menu',
                                                          'url': None}
                                                         ]))
-        bot.send_message(second_user.id, f"Пользователь @{first_user.name} отправил вам запрос дружбы",
-                         reply_markup=keybord_generate([{'text': 'Принять',
-                                                         'callback_data': " ".join(['yes_add_friend', str(first_user.id), str(second_user.id)]),
-                                                         'url': None},
-                                                        {'text': 'Отклонить',
-                                                         'callback_data': " ".join(['no_add_friend', str(first_user.id), str(second_user.id)]),
-                                                         'url': None}]))
+        bot.send_message(second_user.id, f"Пользователь @{first_user.name} "
+                                         f"отправил вам запрос дружбы",
+                         reply_markup=
+                         keybord_generate([{'text': 'Принять',
+                                            'callback_data': " ".join(
+                                                ['yes_add_friend',
+                                                 str(first_user.id),
+                                                 str(second_user.id)]),
+                                            'url': None},
+                                            {'text': 'Отклонить',
+                                             'callback_data': " ".join(
+                                                 ['no_add_friend',
+                                                  str(first_user.id),
+                                                  str(second_user.id)]),
+                                             'url': None}]))
     else:
         print("No")
 
     db_sess.commit()
 
 
-def kosti_game(bot, db_session, user_id):
+def kosti_game(bot, user_id):
     user_choice, bot_choice = randint(0, 6), randint(0, 6)
-    user = db_session.query(User).filter(User.id == user_id).first()
+    user = db_sess.query(User).filter(User.id == user_id).first()
     if user_choice > bot_choice:
         bot.send_message(user_id, f'Очки игрока:{user_choice}\n'
                                   f'Очки диллера:{bot_choice}\n'
@@ -96,4 +106,31 @@ def kosti_game(bot, db_session, user_id):
         if user.rate > 0:
             user.rate -= 1
         bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
-    db_session.commit()
+    db_sess.commit()
+
+
+def start_roll(message, bot, kb, file):
+    if message.text.strip() not in map(str, range(37)):
+        bot.send_message(message.chat.id, 'Вы неверно ввели ставку')
+        bot.send_message(message.chat.id, 'Выберите интересующую вас игру',
+                         reply_markup=kb)
+    else:
+        bot.send_message(message.chat.id, 'Ставка принята!')
+        bot.send_document(message.from_user.id, document=file)
+        user = db_sess.query(User).filter(User.id ==
+                                             message.from_user.id).first()
+        roll = randint(0, 36)
+        bot.send_message(message.chat.id, f'Выпало {roll}')
+        if roll == int(message.text.strip()):
+            bot.send_message(message.chat.id, 'Вы выиграли!')
+            user.rate += 1
+            bot.send_message(message.from_user.id, f'Ваш рейтинг: {user.rate}')
+        else:
+            bot.send_message(message.from_user.id, 'Вы проиграли!')
+            if user.rate > 0:
+                user.rate -= 1
+            bot.send_message(message.from_user.id, f'Ваш рейтинг: {user.rate}')
+        db_sess.commit()
+        bot.send_message(message.from_user.id, f'Выберите интересующую вас '
+                                            f'игру',
+                         reply_markup=kb)

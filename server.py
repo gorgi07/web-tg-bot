@@ -4,7 +4,8 @@ from data.users import User
 from data.friends import Friend
 from data.admins import Admin
 from data import db_session, __all_models
-from bot_funcs import callback_answer, tsuefa_game, add_friend, kosti_game
+from bot_funcs import (callback_answer, tsuefa_game, add_friend, kosti_game,
+                       start_roll)
 from keyboard_prototype import *
 import threading
 
@@ -140,7 +141,7 @@ def callback_handler(call):
         text = ('Введите username пользователя, которого '
                 'хотите добавить в друзья (@username):')
         new_message = bot.send_message(call.from_user.id, text)
-        bot.register_next_step_handler(new_message, add_friend, bot)
+        bot.register_next_step_handler(new_message, add_friend, bot, )
 
     # //*-------------------------------------------------------------------------------------*//
     elif 'yes_add_friend' in call.data:
@@ -208,7 +209,7 @@ def callback_handler(call):
                      'scissors': 'Ножницы',
                      'paper': 'Бумага'}
         bot.delete_message(call.message.chat.id, call.message.id)
-        tsuefa_game(bot, translate[call.data], db_sess, call.from_user.id)
+        tsuefa_game(bot, translate[call.data], call.from_user.id)
         bot.send_message(call.from_user.id, f'Выберите интересующую вас '
                                             f'игру',
                          reply_markup=games_menu_kb)
@@ -221,19 +222,19 @@ def callback_handler(call):
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'start_kosti':
         bot.delete_message(call.message.chat.id, call.message.id)
-        kosti_game(bot, db_sess, call.from_user.id)
+        kosti_game(bot, call.from_user.id)
         bot.send_message(call.from_user.id, f'Выберите интересующую вас '
                                             f'игру',
                          reply_markup=games_menu_kb)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'ruletka_game':
-        text = 'Сделайте вашу ставку!'
-        callback_answer(bot, call.from_user.id, text, tsuefa_kb, call)
-
-    # //*-------------------------------------------------------------------------------------*//
-    elif call.data == 'start_roll':
         bot.delete_message(call.message.chat.id, call.message.id)
+        new_message = bot.send_message(call.from_user.id,
+                                       'Сделайте вашу ставку!')
+        bot.register_next_step_handler(new_message, start_roll, bot,
+                                       games_menu_kb, open(
+                'data/ezgif.com-gif-maker-1-1.gif', 'rb'))
 
 
 def start(bot):

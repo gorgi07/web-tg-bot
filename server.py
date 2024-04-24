@@ -78,17 +78,20 @@ def callback_handler(call):
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'friend_list':
         text = 'Ваши друзья:\n'
-        user = db_sess.query(Friend).filter(Friend.id == call.from_user.id).first()
+        user = db_sess.query(Friend).filter(Friend.id ==
+                                            call.from_user.id).first()
         friends_list = user.friends.split()
         friends_list.remove("None")
         for friend in friends_list:
-            text += f"@{db_sess.query(Friend).filter(Friend.id == friend).first().name}\n"
+            text += f"@{db_sess.query(Friend).filter(Friend.id == 
+                                                     friend).first().name}\n"
         text = text.rstrip("\n")
         callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'friend_rate':
-        friend = db_sess.query(Friend).filter(Friend.id == call.from_user.id).first()
+        friend = db_sess.query(Friend).filter(Friend.id ==
+                                              call.from_user.id).first()
         friends_list = friend.friends.split()
         friends_list.remove("None")
         text = "Рейтинг среди ваших друзей:\n"
@@ -102,12 +105,16 @@ def callback_handler(call):
         for i in range(0, min(10, len(friends_rate))):
             text += f"{i + 1}. @{friends_rate[i][1]}\t{friends_rate[i][0]}\n"
         text += "-----------------------------\n"
-        text += f"Ваш рейтинг:\n{friends_rate.index((user.rate, user.name)) + 1}. @{user.name}\t{user.rate}"
-        callback_answer(bot, call.from_user.id, text, friends_all_rate_or_back_kb, call)
+        text += (f"Ваш рейтинг:\n{friends_rate.index((user.rate, 
+                                                     user.name)) + 1}. "
+                 f"@{user.name}\t{user.rate}")
+        callback_answer(bot, call.from_user.id, text,
+                        friends_all_rate_or_back_kb, call)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'all_friend_rate':
-        friend = db_sess.query(Friend).filter(Friend.id == call.from_user.id).first()
+        friend = db_sess.query(Friend).filter(Friend.id ==
+                                              call.from_user.id).first()
         friends_list = friend.friends.split()
         friends_list.remove("None")
         text = "Рейтинг среди ваших друзей:\n"
@@ -121,13 +128,17 @@ def callback_handler(call):
         for i in range(0, len(friends_rate)):
             text += f"{i + 1}. @{friends_rate[i][1]}\t{friends_rate[i][0]}\n"
         text += "-----------------------------\n"
-        text += f"Ваш рейтинг:\n{friends_rate.index((user.rate, user.name)) + 1}. @{user.name}\t{user.rate}"
-        callback_answer(bot, call.from_user.id, text, friends_all_rate_or_back_kb, call)
+        text += (f"Ваш рейтинг:\n{friends_rate.index((user.rate, 
+                                                     user.name)) + 1}. "
+                 f"@{user.name}\t{user.rate}")
+        callback_answer(bot, call.from_user.id, text,
+                        friends_all_rate_or_back_kb, call)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'add_friend':
         bot.delete_message(call.message.chat.id, call.message.id)
-        text = 'Введите username пользователя, которого хотите добавить в друзья (@username):'
+        text = ('Введите username пользователя, которого '
+                'хотите добавить в друзья (@username):')
         new_message = bot.send_message(call.from_user.id, text)
         bot.register_next_step_handler(new_message, add_friend, bot)
 
@@ -137,20 +148,26 @@ def callback_handler(call):
         first_id = int(callback[1])
         second_id = int(callback[2])
 
-        first_friend = db_sess.query(Friend).filter(Friend.id == first_id).first()
+        first_friend = db_sess.query(Friend).filter(Friend.id ==
+                                                    first_id).first()
         input_array = first_friend.friends_input.split()
         input_array.remove(str(second_id))
         first_friend.friends_input = " ".join(input_array)
         first_friend.friends += f" {second_id}"
 
-        second_friend = db_sess.query(Friend).filter(Friend.id == second_id).first()
+        second_friend = db_sess.query(Friend).filter(Friend.id ==
+                                                     second_id).first()
         output_array = second_friend.friends_output.split()
         output_array.remove(str(first_id))
         second_friend.friends_output = " ".join(output_array)
         second_friend.friends += f" {first_id}"
 
-        bot.send_message(second_id, f"Вы добавили в дркзья пользователя @{first_friend.name}", reply_markup=rate_menu_kb)
-        bot.send_message(first_id, f"Пользователь @{second_friend.name} принял ваш запрос дружбы", reply_markup=rate_menu_kb)
+        bot.send_message(second_id, f"Вы добавили в дркзья пользователя "
+                                    f"@{first_friend.name}",
+                         reply_markup=rate_menu_kb)
+        bot.send_message(first_id, f"Пользователь @{second_friend.name} "
+                                   f"принял ваш запрос дружбы",
+                         reply_markup=rate_menu_kb)
         db_sess.commit()
 
     # //*-------------------------------------------------------------------------------------*//
@@ -159,18 +176,24 @@ def callback_handler(call):
         first_id = int(callback[1])
         second_id = int(callback[2])
 
-        first_friend = db_sess.query(Friend).filter(Friend.id == first_id).first()
+        first_friend = db_sess.query(Friend).filter(Friend.id ==
+                                                    first_id).first()
         input_array = first_friend.friends_input.split()
         input_array.remove(str(second_id))
         first_friend.friends_input = " ".join(input_array)
 
-        second_friend = db_sess.query(Friend).filter(Friend.id == second_id).first()
+        second_friend = db_sess.query(Friend).filter(Friend.id ==
+                                                     second_id).first()
         output_array = second_friend.friends_output.split()
         output_array.remove(str(first_id))
         second_friend.friends_output = " ".join(output_array)
 
-        bot.send_message(second_id, f"Вы отклонили запрос дружбы от @{first_friend.name}", reply_markup=rate_menu_kb)
-        bot.send_message(first_id, f"Пользователь @{second_friend.name} отклонил ваш запрос дружбы", reply_markup=rate_menu_kb)
+        bot.send_message(second_id, f"Вы отклонили запрос дружбы от "
+                                    f"@{first_friend.name}",
+                         reply_markup=rate_menu_kb)
+        bot.send_message(first_id, f"Пользователь @{second_friend.name} "
+                                   f"отклонил ваш запрос дружбы",
+                         reply_markup=rate_menu_kb)
         db_sess.commit()
 
     # //*-------------------------------------------------------------------------------------*//

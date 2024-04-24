@@ -12,3 +12,6 @@ class Friend(SqlAlchemyBase):
     friends = sqlalchemy.Column(sqlalchemy.String, default="None")
     friends_input = sqlalchemy.Column(sqlalchemy.String, default="None")
     friends_output = sqlalchemy.Column(sqlalchemy.String, default="None")
+
+    def full_information(self):
+        return [self.id, self.name, self.friends, self.friends_input, self.friends_output]

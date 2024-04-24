@@ -5,8 +5,7 @@ from data.friends import Friend
 from data.admins import Admin
 from data import db_session, __all_models
 from bot_funcs import callback_answer, tsuefa_game, add_friend, kosti_game
-from keyboard_prototype import (start_kb, rate_menu_kb, friends_menu_kb,
-                                games_menu_kb, tsuefa_kb, kosti_kb)
+from keyboard_prototype import *
 import threading
 
 # создание бота
@@ -60,60 +59,126 @@ def callback_handler(call):
         text = f'Рейтинг участников бота по игровым очкам:\n'
         callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'games_menu':
         text = f'Выберите интересующую вас игру'
         callback_answer(bot, call.from_user.id, text, games_menu_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'friends_menu':
         text = (f'Вы хотите просмотреть список своих друзей или ваш рейтинг '
                 f'среди них?')
         callback_answer(bot, call.from_user.id, text, friends_menu_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'main_menu':
         text = 'Вы в главном меню, выберите, что вас интересует?'
         callback_answer(bot, call.from_user.id, text, start_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'friend_list':
         text = 'Ваши друзья:\n'
-        user = db_sess.query(User).filter(User.id == call.from_user.id).first()
-        text += '\n'.join(user.friends.split())
+        user = db_sess.query(Friend).filter(Friend.id == call.from_user.id).first()
+        friends_list = user.friends.split()
+        friends_list.remove("None")
+        for friend in friends_list:
+            text += f"@{db_sess.query(Friend).filter(Friend.id == friend).first().name}\n"
+        text = text.rstrip("\n")
         callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'friend_rate':
+        friend = db_sess.query(Friend).filter(Friend.id == call.from_user.id).first()
+        friends_list = friend.friends.split()
+        friends_list.remove("None")
+        text = "Рейтинг среди ваших друзей:\n"
+        friends_rate = []
+        for friend in friends_list:
+            this_friend = db_sess.query(User).filter(User.id == friend).first()
+            friends_rate.append((this_friend.rate, this_friend.name))
+        user = db_sess.query(User).filter(User.id == call.from_user.id).first()
+        friends_rate.append((user.rate, user.name))
+        friends_rate.sort(key=lambda x: x[0], reverse=True)
+        for i in range(0, min(10, len(friends_rate))):
+            text += f"{i + 1}. @{friends_rate[i][1]}\t{friends_rate[i][0]}\n"
+        text += "-----------------------------\n"
+        text += f"Ваш рейтинг:\n{friends_rate.index((user.rate, user.name)) + 1}. @{user.name}\t{user.rate}"
+        callback_answer(bot, call.from_user.id, text, friends_all_rate_or_back_kb, call)
+
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'all_friend_rate':
+        friend = db_sess.query(Friend).filter(Friend.id == call.from_user.id).first()
+        friends_list = friend.friends.split()
+        friends_list.remove("None")
+        text = "Рейтинг среди ваших друзей:\n"
+        friends_rate = []
+        for friend in friends_list:
+            this_friend = db_sess.query(User).filter(User.id == friend).first()
+            friends_rate.append((this_friend.rate, this_friend.name))
+        user = db_sess.query(User).filter(User.id == call.from_user.id).first()
+        friends_rate.append((user.rate, user.name))
+        friends_rate.sort(key=lambda x: x[0], reverse=True)
+        for i in range(0, len(friends_rate)):
+            text += f"{i + 1}. @{friends_rate[i][1]}\t{friends_rate[i][0]}\n"
+        text += "-----------------------------\n"
+        text += f"Ваш рейтинг:\n{friends_rate.index((user.rate, user.name)) + 1}. @{user.name}\t{user.rate}"
+        callback_answer(bot, call.from_user.id, text, friends_all_rate_or_back_kb, call)
+
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'add_friend':
         bot.delete_message(call.message.chat.id, call.message.id)
         text = 'Введите username пользователя, которого хотите добавить в друзья (@username):'
         new_message = bot.send_message(call.from_user.id, text)
         bot.register_next_step_handler(new_message, add_friend, bot)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif 'yes_add_friend' in call.data:
         callback = call.data.split(" ")
         first_id = int(callback[1])
         second_id = int(callback[2])
+
         first_friend = db_sess.query(Friend).filter(Friend.id == first_id).first()
-        print(first_friend.friends_input)
-        first_friend.friends_input = first_friend.friends_input.replace(f" {second_id}", "")
+        input_array = first_friend.friends_input.split()
+        input_array.remove(str(second_id))
+        first_friend.friends_input = " ".join(input_array)
         first_friend.friends += f" {second_id}"
+
         second_friend = db_sess.query(Friend).filter(Friend.id == second_id).first()
-        second_friend.friends_output = second_friend.friends_output.replace(f" {first_id}", "")
+        output_array = second_friend.friends_output.split()
+        output_array.remove(str(first_id))
+        second_friend.friends_output = " ".join(output_array)
         second_friend.friends += f" {first_id}"
+
         bot.send_message(second_id, f"Вы добавили в дркзья пользователя @{first_friend.name}", reply_markup=rate_menu_kb)
         bot.send_message(first_id, f"Пользователь @{second_friend.name} принял ваш запрос дружбы", reply_markup=rate_menu_kb)
+        db_sess.commit()
 
+    # //*-------------------------------------------------------------------------------------*//
     elif 'no_add_friend' in call.data:
         callback = call.data.split(" ")
         first_id = int(callback[1])
         second_id = int(callback[2])
+
         first_friend = db_sess.query(Friend).filter(Friend.id == first_id).first()
-        first_friend.friends_input = " ".join(first_friend.friends_input.split().remove(second_id))
+        input_array = first_friend.friends_input.split()
+        input_array.remove(str(second_id))
+        first_friend.friends_input = " ".join(input_array)
+
         second_friend = db_sess.query(Friend).filter(Friend.id == second_id).first()
-        second_friend.friends_input = " ".join(second_friend.friends_input.split().remove(first_id))
+        output_array = second_friend.friends_output.split()
+        output_array.remove(str(first_id))
+        second_friend.friends_output = " ".join(output_array)
+
         bot.send_message(second_id, f"Вы отклонили запрос дружбы от @{first_friend.name}", reply_markup=rate_menu_kb)
         bot.send_message(first_id, f"Пользователь @{second_friend.name} отклонил ваш запрос дружбы", reply_markup=rate_menu_kb)
+        db_sess.commit()
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'tsuefa_game':
         text = 'Играем! Камень, ножницы, бумага...\n1, 2, 3!'
         callback_answer(bot, call.from_user.id, text, tsuefa_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif (call.data == 'stone' or call.data == 'paper' or
           call.data == 'scissors'):
         translate = {'stone': 'Камень',
@@ -125,10 +190,12 @@ def callback_handler(call):
                                             f'игру',
                          reply_markup=games_menu_kb)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'kosti_game':
         text = 'Бросаем кости!'
         callback_answer(bot, call.from_user.id, text, kosti_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'start_kosti':
         bot.delete_message(call.message.chat.id, call.message.id)
         kosti_game(bot, db_sess, call.from_user.id)
@@ -136,10 +203,12 @@ def callback_handler(call):
                                             f'игру',
                          reply_markup=games_menu_kb)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'ruletka_game':
         text = 'Сделайте вашу ставку!'
         callback_answer(bot, call.from_user.id, text, tsuefa_kb, call)
 
+    # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'start_roll':
         bot.delete_message(call.message.chat.id, call.message.id)
 

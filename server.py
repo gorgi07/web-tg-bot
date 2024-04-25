@@ -5,7 +5,7 @@ from data.friends import Friend
 from data.admins import Admin
 from data import db_session, __all_models
 from bot_funcs import (callback_answer, tsuefa_game, add_friend, kosti_game,
-                       start_roll)
+                       start_roll, del_friend)
 from keyboard_prototype import *
 import threading
 
@@ -58,7 +58,47 @@ def start_reaction(message):
 def callback_handler(call):
     if call.data == 'rate_menu':
         text = f'Рейтинг участников бота по игровым очкам:\n'
-        callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+
+        users = db_sess.query(User).filter(User.id != call.from_user.id).all()
+        users_rate = []
+        for user in users:
+            this_user = db_sess.query(User).filter(User.id == user.id).first()
+            users_rate.append((this_user.rate, this_user.name))
+        this_man = db_sess.query(User).filter(User.id == call.from_user.id).first()
+        users_rate.append((this_man.rate, this_man.name))
+        users_rate.sort(key=lambda x: x[0], reverse=True)
+        for i in range(0, min(10, len(users_rate))):
+            text += f"{i + 1}. @{users_rate[i][1]}\t{users_rate[i][0]}\n"
+        text += "-----------------------------\n"
+        text += (f"Ваш рейтинг:\n{users_rate.index((this_man.rate,
+                                                    this_man.name)) + 1}. "
+                 f"@{this_man.name}\t{this_man.rate}")
+        callback_answer(bot, call.from_user.id, text,
+                        rate_menu_kb, call)
+
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'all_rate':
+        text = f'Рейтинг участников бота по игровым очкам:\n'
+
+        users = db_sess.query(User).filter(User.id != call.from_user.id).all()
+        users_rate = []
+        for user in users:
+            this_user = db_sess.query(User).filter(User.id == user.id).first()
+            users_rate.append((this_user.rate, this_user.name))
+        this_man = db_sess.query(User).filter(User.id == call.from_user.id).first()
+        users_rate.append((this_man.rate, this_man.name))
+        users_rate.sort(key=lambda x: x[0], reverse=True)
+        for i in range(0, len(users_rate)):
+            text += f"{i + 1}. @{users_rate[i][1]}\t{users_rate[i][0]}\n"
+        text += "-----------------------------\n"
+        text += (f"Ваш рейтинг:\n{users_rate.index((this_man.rate,
+                                                    this_man.name)) + 1}. "
+                 f"@{this_man.name}\t{this_man.rate}")
+        callback_answer(bot, call.from_user.id, text, keybord_generate(
+            [{'text': 'Назад',
+              'callback_data': 'main_menu',
+              'url': None}
+             ]), call)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'games_menu':
@@ -84,10 +124,10 @@ def callback_handler(call):
         friends_list = user.friends.split()
         friends_list.remove("None")
         for friend in friends_list:
-            text += f"@{db_sess.query(Friend).filter(Friend.id == 
+            text += f"@{db_sess.query(Friend).filter(Friend.id ==
                                                      friend).first().name}\n"
         text = text.rstrip("\n")
-        callback_answer(bot, call.from_user.id, text, rate_menu_kb, call)
+        callback_answer(bot, call.from_user.id, text, back_to_friends, call)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'friend_rate':
@@ -106,8 +146,8 @@ def callback_handler(call):
         for i in range(0, min(10, len(friends_rate))):
             text += f"{i + 1}. @{friends_rate[i][1]}\t{friends_rate[i][0]}\n"
         text += "-----------------------------\n"
-        text += (f"Ваш рейтинг:\n{friends_rate.index((user.rate, 
-                                                     user.name)) + 1}. "
+        text += (f"Ваш рейтинг:\n{friends_rate.index((user.rate,
+                                                      user.name)) + 1}. "
                  f"@{user.name}\t{user.rate}")
         callback_answer(bot, call.from_user.id, text,
                         friends_all_rate_or_back_kb, call)
@@ -129,11 +169,11 @@ def callback_handler(call):
         for i in range(0, len(friends_rate)):
             text += f"{i + 1}. @{friends_rate[i][1]}\t{friends_rate[i][0]}\n"
         text += "-----------------------------\n"
-        text += (f"Ваш рейтинг:\n{friends_rate.index((user.rate, 
-                                                     user.name)) + 1}. "
+        text += (f"Ваш рейтинг:\n{friends_rate.index((user.rate,
+                                                      user.name)) + 1}. "
                  f"@{user.name}\t{user.rate}")
         callback_answer(bot, call.from_user.id, text,
-                        friends_all_rate_or_back_kb, call)
+                        back_to_friends, call)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'add_friend':
@@ -141,7 +181,7 @@ def callback_handler(call):
         text = ('Введите username пользователя, которого '
                 'хотите добавить в друзья (@username):')
         new_message = bot.send_message(call.from_user.id, text)
-        bot.register_next_step_handler(new_message, add_friend, bot, )
+        bot.register_next_step_handler(new_message, add_friend, bot)
 
     # //*-------------------------------------------------------------------------------------*//
     elif 'yes_add_friend' in call.data:
@@ -196,6 +236,14 @@ def callback_handler(call):
                                    f"отклонил ваш запрос дружбы",
                          reply_markup=rate_menu_kb)
         db_sess.commit()
+
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'del_friend':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        text = ('Введите username пользователя, которого '
+                'хотите удалить из друзей (@username):')
+        new_message = bot.send_message(call.from_user.id, text)
+        bot.register_next_step_handler(new_message, del_friend, bot)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'tsuefa_game':

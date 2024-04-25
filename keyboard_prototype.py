@@ -13,15 +13,21 @@ start_kb = keybord_generate(
      ])
 
 # определение всех, требуемых далее inline-клавиатур
-rate_menu_kb = keybord_generate(
-    [{'text': 'Назад',
-      'callback_data': 'main_menu',
-      'url': None}
-     ])
+rate_menu_kb = keybord_generate([
+    {'text': 'Полный рейтинг',
+     'callback_data': 'all_rate',
+     'url': None},
+    {'text': 'Назад',
+     'callback_data': 'main_menu',
+     'url': None}
+])
 
 friends_menu_kb = keybord_generate([
     {'text': 'Добавить друга',
      'callback_data': 'add_friend',
+     'url': None},
+    {'text': 'Удалить друга',
+     'callback_data': 'del_friend',
      'url': None},
     {'text': 'Список друзей',
      'callback_data': 'friend_list',
@@ -75,3 +81,9 @@ friends_all_rate_or_back_kb = keybord_generate(
       'callback_data': 'friends_menu',
       'url': None}]
 )
+
+back_to_friends = keybord_generate(
+    [{'text': 'Назад',
+      'callback_data': 'friends_menu',
+      'url': None}
+     ])

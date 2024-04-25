@@ -24,6 +24,13 @@ def keybord_generate(buttons: list):
     return markup
 
 
+back_to_friends = keybord_generate(
+    [{'text': 'Назад',
+      'callback_data': 'friends_menu',
+      'url': None}
+     ])
+
+
 def callback_answer(bot, user_id, text, keybord, call):
     bot.delete_message(call.message.chat.id, call.message.id)
     bot.send_message(user_id, text, reply_markup=keybord)
@@ -62,11 +69,8 @@ def add_friend(message, bot):
         second_user.friends_output += f" {first_user.id}"
         bot.send_message(message.from_user.id, "Запрос дружбы успешно "
                                                "отправлен",
-                         reply_markup=keybord_generate([{'text': 'Назад',
-                                                         'callback_data':
-                                                             'friends_menu',
-                                                         'url': None}
-                                                        ]))
+                         reply_markup=back_to_friends)
+
         bot.send_message(second_user.id, f"Пользователь @{first_user.name} "
                                          f"отправил вам запрос дружбы",
                          reply_markup=
@@ -83,7 +87,43 @@ def add_friend(message, bot):
                                                   str(second_user.id)]),
                                              'url': None}]))
     else:
-        print("No")
+        bot.send_message(message.from_user.id, "Данный пользователь "
+                                               "ещё не зарегистрирован",
+                         reply_markup=back_to_friends)
+
+    db_sess.commit()
+
+
+def del_friend(message, bot):
+    new_friend = str(message.text).replace("@", "")
+    first_user = db_sess.query(Friend).filter(Friend.id ==
+                                              message.from_user.id).first()
+    second_user = db_sess.query(Friend).filter(Friend.name == new_friend).first()
+
+    if second_user:
+        input_array = first_user.friends.split()
+        if str(second_user.id) in input_array:
+            input_array.remove(str(second_user.id))
+            first_user.friends = " ".join(input_array)
+
+            input_array = second_user.friends.split()
+            input_array.remove(str(first_user.id))
+            second_user.friends = " ".join(input_array)
+
+            bot.send_message(message.from_user.id, f"Вы удалили из друзей "
+                                                   f"пользователя @{second_user.name}",
+                             reply_markup=back_to_friends)
+            bot.send_message(second_user.id, f"Пользователь @{first_user.name} "
+                                                   f"удалил вас из друзей")
+        else:
+            bot.send_message(message.from_user.id, "Данный пользователь "
+                                                   "не является вашим другом",
+                             reply_markup=back_to_friends)
+
+    else:
+        bot.send_message(message.from_user.id, "Данный пользователь "
+                                               "ещё не зарегистрирован",
+                         reply_markup=back_to_friends)
 
     db_sess.commit()
 

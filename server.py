@@ -287,7 +287,11 @@ def callback_handler(call):
 
 def start(bot):
     # бесконечный поток запросов к серверам telegram
-    bot.infinity_polling()
+    while True:
+        try:
+            bot.infinity_polling()
+        except Exception as e:
+            print(f"[ОШИБКА] Произошла ошибка подключения {e}")
 
 
 if __name__ == '__main__':

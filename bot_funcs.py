@@ -149,8 +149,8 @@ def kosti_game(bot, user_id):
     db_sess.commit()
 
 
-def start_roll(message, bot, kb, file):
-    if message.text.strip() not in map(str, range(37)):
+def start_roll_num(message, bot, kb, file):
+    if message.text.strip() not in map(str, range(1, 37)):
         bot.send_message(message.chat.id, 'Вы неверно ввели ставку')
         bot.send_message(message.chat.id, 'Выберите интересующую вас игру',
                          reply_markup=kb)
@@ -163,14 +163,41 @@ def start_roll(message, bot, kb, file):
         bot.send_message(message.chat.id, f'Выпало {roll}')
         if roll == int(message.text.strip()):
             bot.send_message(message.chat.id, 'Вы выиграли!')
-            user.rate += 1
+            user.rate += 25
             bot.send_message(message.from_user.id, f'Ваш рейтинг: {user.rate}')
         else:
             bot.send_message(message.from_user.id, 'Вы проиграли!')
-            if user.rate > 0:
-                user.rate -= 1
+            if user.rate > 4:
+                user.rate -= 5
             bot.send_message(message.from_user.id, f'Ваш рейтинг: {user.rate}')
         db_sess.commit()
-        bot.send_message(message.from_user.id, f'Выберите интересующую вас '
-                                            f'игру',
+        bot.send_message(message.from_user.id, f'Ещё раз?',
                          reply_markup=kb)
+
+def start_roll_colour(user_choice, bot, kb, file, user_id):
+    result = randint(1, 36)
+    bot.send_message(user_id, 'Ставка принята!')
+    bot.send_document(user_id, document=file)
+    user = db_sess.query(User).filter(User.id == user_id).first()
+    if user_choice == 0:
+        win = 50
+    else:
+        win = 5
+    if result != 0:
+        if result % 2 == 0:
+            result = 'красный'
+        else:
+            result = 'чёрный'
+    bot.send_message(user_id, f'Выпал {result}')
+    if user_choice == result:
+        bot.send_message(user_id, 'Вы выиграли!')
+        user.rate += win
+        bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
+    else:
+        bot.send_message(user_id, 'Вы проиграли!')
+        if user.rate > 4:
+            user.rate -= 5
+        bot.send_message(user_id, f'Ваш рейтинг: {user.rate}')
+    db_sess.commit()
+    bot.send_message(user_id, f'Ещё раз?',
+                     reply_markup=kb)

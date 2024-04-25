@@ -5,7 +5,7 @@ from data.friends import Friend
 from data.admins import Admin
 from data import db_session, __all_models
 from bot_funcs import (callback_answer, tsuefa_game, add_friend, kosti_game,
-                       start_roll, del_friend)
+                       start_roll_num, del_friend, start_roll_colour)
 from keyboard_prototype import *
 import threading
 
@@ -258,9 +258,8 @@ def callback_handler(call):
                      'paper': 'Бумага'}
         bot.delete_message(call.message.chat.id, call.message.id)
         tsuefa_game(bot, translate[call.data], call.from_user.id)
-        bot.send_message(call.from_user.id, f'Выберите интересующую вас '
-                                            f'игру',
-                         reply_markup=games_menu_kb)
+        bot.send_message(call.from_user.id, f'Ещё раз?',
+                         reply_markup=after_tsuefa_game)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'kosti_game':
@@ -271,17 +270,39 @@ def callback_handler(call):
     elif call.data == 'start_kosti':
         bot.delete_message(call.message.chat.id, call.message.id)
         kosti_game(bot, call.from_user.id)
-        bot.send_message(call.from_user.id, f'Выберите интересующую вас '
-                                            f'игру',
-                         reply_markup=games_menu_kb)
+        bot.send_message(call.from_user.id, f'Ещё раз?',
+                         reply_markup=after_kosti_game)
 
     # //*-------------------------------------------------------------------------------------*//
     elif call.data == 'ruletka_game':
+        callback_answer(bot, call.from_user.id, "Сделайте ставку",
+                        rollet_kb, call)
+
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'red_bet':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        start_roll_colour('красный', bot, after_roll_menu, open(
+            'data/ezgif.com-gif-maker-1-1.gif', 'rb'), call.from_user.id)
+
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'black_bet':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        start_roll_colour('чёрный', bot, after_roll_menu, open(
+            'data/ezgif.com-gif-maker-1-1.gif', 'rb'), call.from_user.id)
+
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'zero_bet':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        start_roll_colour(0, bot, after_roll_menu, open(
+            'data/ezgif.com-gif-maker-1-1.gif', 'rb'), call.from_user.id)
+
+    # //*-------------------------------------------------------------------------------------*//
+    elif call.data == 'num_bet':
         bot.delete_message(call.message.chat.id, call.message.id)
         new_message = bot.send_message(call.from_user.id,
                                        'Сделайте вашу ставку!')
-        bot.register_next_step_handler(new_message, start_roll, bot,
-                                       games_menu_kb, open(
+        bot.register_next_step_handler(new_message, start_roll_num, bot,
+                                       after_roll_menu, open(
                 'data/ezgif.com-gif-maker-1-1.gif', 'rb'))
 
 

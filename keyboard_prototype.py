@@ -87,3 +87,45 @@ back_to_friends = keybord_generate(
       'callback_data': 'friends_menu',
       'url': None}
      ])
+
+rollet_kb = keybord_generate(
+    [{'text': 'Поставить на красный',
+      'callback_data': 'red_bet',
+      'url': None},
+     {'text': 'Поставить на чёрный',
+      'callback_data': 'black_bet',
+      'url': None},
+     {'text': 'Поставить на зеро',
+      'callback_data': 'zero_bet',
+      'url': None},
+     {'text': 'Поставить на число',
+      'callback_data': 'num_bet',
+      'url': None}
+])
+
+after_roll_menu = keybord_generate(
+    [{'text': 'Сыграть ещё раз',
+      'callback_data': 'ruletka_game',
+      'url': None},
+       {'text': 'Назад',
+       'callback_data': 'games_menu',
+       'url': None}
+])
+
+after_tsuefa_game = keybord_generate(
+    [{'text': 'Сыграть ещё раз',
+      'callback_data': 'tsuefa_game',
+      'url': None},
+       {'text': 'Назад',
+       'callback_data': 'games_menu',
+       'url': None}
+])
+
+after_kosti_game = keybord_generate(
+    [{'text': 'Сыграть ещё раз',
+      'callback_data': 'kosti_game',
+      'url': None},
+       {'text': 'Назад',
+       'callback_data': 'games_menu',
+       'url': None}
+])

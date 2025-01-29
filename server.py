@@ -10,7 +10,7 @@ from keyboard_prototype import *
 import threading
 
 # создание бота
-API_TOKEN = '7168920535:AAFENbTdCAxujSoFc9KHomPtqynghWzjZIA'
+API_TOKEN = 'TOKEN'
 bot = telebot.TeleBot(API_TOKEN)
 
 # подключение БД и создание сессии
